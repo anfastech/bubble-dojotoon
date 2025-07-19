@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { motion } from 'framer-motion';
+import * as THREE from 'three';
 
 const Butterfly = ({ image, position, isFlying = false, onAnimationComplete }) => {
   const meshRef = useRef();
@@ -56,8 +57,12 @@ const Butterfly = ({ image, position, isFlying = false, onAnimationComplete }) =
   }
 
   return (
-    <sprite scale={[1, 1, 1]} position={[0, 0, 0.1]}>
-      <spriteMaterial transparent opacity={0.9} />
+    <sprite ref={meshRef} scale={[1, 1, 1]} position={[0, 0, 0.1]}>
+      <spriteMaterial 
+        map={new THREE.TextureLoader().load(image)}
+        transparent 
+        opacity={0.9} 
+      />
     </sprite>
   );
 };
