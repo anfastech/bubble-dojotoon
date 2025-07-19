@@ -8,10 +8,19 @@ const GlassBubble = ({ position, onClick, children, scale = 1 }) => {
 
   useFrame((state) => {
     if (meshRef.current) {
-      // Gentle floating animation
-      meshRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 0.5) * 0.1;
-      meshRef.current.position.x = position[0] + Math.cos(state.clock.elapsedTime * 0.3) * 0.05;
-      meshRef.current.rotation.y = state.clock.elapsedTime * 0.1;
+      // Physics-based movement that responds to internal butterfly motion
+      const butterflyInfluence = {
+        x: Math.cos(state.clock.elapsedTime * 1.2) * 0.02,
+        y: Math.sin(state.clock.elapsedTime * 1.5) * 0.02
+      };
+      
+      // Gentle floating with butterfly-influenced movement
+      meshRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 0.5) * 0.08 + butterflyInfluence.y;
+      meshRef.current.position.x = position[0] + Math.cos(state.clock.elapsedTime * 0.3) * 0.04 + butterflyInfluence.x;
+      meshRef.current.rotation.y = state.clock.elapsedTime * 0.05;
+      
+      // Subtle bubble wobble from butterfly movement
+      meshRef.current.rotation.z = Math.sin(state.clock.elapsedTime * 2) * 0.02;
     }
   });
 
@@ -36,14 +45,15 @@ const GlassBubble = ({ position, onClick, children, scale = 1 }) => {
         <meshPhysicalMaterial
           color={bubbleColor}
           transparent
-          opacity={0.3}
-          roughness={0}
+          opacity={0.1}
+          roughness={0.1}
           metalness={0}
           clearcoat={1}
-          clearcoatRoughness={0}
-          transmission={0.9}
-          thickness={0.5}
-          ior={1.33}
+          clearcoatRoughness={0.1}
+          transmission={0.95}
+          thickness={0.1}
+          ior={1.2}
+          side={THREE.DoubleSide}
         />
         {/* Butterfly inside the bubble mesh */}
         <group position={[0, 0, 0]}>
