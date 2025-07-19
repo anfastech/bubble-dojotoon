@@ -2,39 +2,65 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+/* Bubble Dojotoon Design System - Vibrant and playful colors for children
 All colors MUST be HSL.
 */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* Sky-themed background */
+    --background: 200 100% 92%;
+    --foreground: 230 15% 15%;
 
+    /* Bubble colors - bright and playful */
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 230 15% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 230 15% 15%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Primary bubble pink */
+    --primary: 320 85% 60%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Secondary bubble cyan */
+    --secondary: 180 85% 60%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    /* Gentle muted tones */
+    --muted: 200 30% 85%;
+    --muted-foreground: 230 15% 40%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* Accent bubble yellow */
+    --accent: 50 95% 65%;
+    --accent-foreground: 230 15% 15%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    /* Success green for celebrations */
+    --success: 120 85% 50%;
+    --success-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    /* Destructive kept gentle */
+    --destructive: 0 70% 65%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Subtle borders */
+    --border: 200 30% 80%;
+    --input: 200 30% 80%;
+    --ring: 320 85% 60%;
+
+    /* Bubble gradients */
+    --gradient-bubble-pink: linear-gradient(135deg, hsl(320 85% 70%), hsl(280 85% 65%));
+    --gradient-bubble-cyan: linear-gradient(135deg, hsl(180 85% 70%), hsl(200 85% 65%));
+    --gradient-bubble-yellow: linear-gradient(135deg, hsl(50 95% 75%), hsl(40 95% 70%));
+    --gradient-bubble-purple: linear-gradient(135deg, hsl(280 85% 70%), hsl(260 85% 65%));
+    --gradient-sky: linear-gradient(180deg, hsl(200 100% 85%), hsl(200 100% 92%));
+
+    /* Celebration effects */
+    --glow-celebration: 0 0 20px hsl(50 95% 65% / 0.5);
+    --shadow-bubble: 0 8px 25px hsl(320 85% 60% / 0.3);
+
+    /* Smooth transitions */
+    --transition-bubble: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 
     --radius: 0.5rem;
 
@@ -100,6 +126,39 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-pixelify;
   }
+}
+
+/* Bubble-specific animations and classes */
+@layer components {
+  .bubble {
+    @apply rounded-full shadow-lg cursor-pointer transition-all duration-300;
+    background: var(--gradient-bubble-pink);
+    box-shadow: var(--shadow-bubble);
+  }
+  
+  .bubble-cyan {
+    background: var(--gradient-bubble-cyan);
+    box-shadow: 0 8px 25px hsl(180 85% 60% / 0.3);
+  }
+  
+  .bubble-yellow {
+    background: var(--gradient-bubble-yellow);
+    box-shadow: 0 8px 25px hsl(50 95% 65% / 0.3);
+  }
+  
+  .bubble-purple {
+    background: var(--gradient-bubble-purple);
+    box-shadow: 0 8px 25px hsl(280 85% 70% / 0.3);
+  }
+  
+  .sky-gradient {
+    background: var(--gradient-sky);
+  }
+  
+  .celebration-glow {
+    box-shadow: var(--glow-celebration);
+  }
+}
 }
