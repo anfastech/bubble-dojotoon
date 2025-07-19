@@ -17,14 +17,15 @@ const ButterflySprite = ({ image }) => {
 
   useFrame((state) => {
     if (meshRef.current) {
-      // Gentle flutter animation inside bubble
-      meshRef.current.rotation.z = Math.sin(state.clock.elapsedTime * 4) * 0.1;
-      meshRef.current.position.y = Math.sin(state.clock.elapsedTime * 3) * 0.1;
+      // Very gentle flutter animation inside bubble - stay centered
+      meshRef.current.rotation.z = Math.sin(state.clock.elapsedTime * 2) * 0.05;
+      meshRef.current.position.y = Math.sin(state.clock.elapsedTime * 1.5) * 0.02;
+      meshRef.current.position.x = Math.cos(state.clock.elapsedTime * 1.2) * 0.02;
     }
   });
 
   return (
-    <sprite ref={meshRef} scale={[1.2, 1.2, 1.2]} position={[0, 0, 0.2]}>
+    <sprite ref={meshRef} scale={[0.8, 0.8, 0.8]} position={[0, 0, 0.1]}>
       <spriteMaterial 
         map={texture}
         transparent 
