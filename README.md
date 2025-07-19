@@ -1,73 +1,60 @@
-# Welcome to your Lovable project
+# Bubble Dojotoon
 
-## Project info
+A sensory rich bubble game to free butterflies, designed for accessibility and delight.
 
-**URL**: https://lovable.dev/projects/929224a2-1652-4412-b6c7-3d73ec1894f6
+## 🦋 Project Description
+Bubble Dojotoon is an accessible, joyful game where players pop floating glass-like bubbles to free colorful butterflies. Designed for children and anyone who loves gentle, sensory play, the game features large interactive zones, calming visuals, and friendly sound design. After freeing butterflies, players celebrate with confetti and can take a selfie with their device's camera.
 
-## How can I edit this code?
+## 🛠 Tech Stack
+- React (JavaScript)
+- TailwindCSS
+- Framer Motion (floating and popping animation)
+- Lottie React (butterfly flight and celebration animations)
+- GLSL Shader (via Three.js / react-three-fiber) for glass-like bubble effects
+- Google Font: Pixelify Sans
+- shadcn/ui for UI components
+- Webcam API (getUserMedia) for selfie capture
 
-There are several ways of editing your application.
+## 🐣 Game Flow
+- **Start Screen:** Simple "Start" button.
+- **Main Game:**
+  - 2 or 3 large water bubbles float on screen at a time.
+  - Each bubble contains a solid-color butterfly (Lottie animation).
+  - Bubbles float and move randomly (Framer Motion, spring physics).
+  - Tap/click a bubble to pop it, then the butterfly flies away with celebration (Lottie + confetti + sound).
+  - After one is popped, another appears, keeping a max of 3 at a time.
+- **Victory:**
+  - After freeing a few butterflies (e.g. 5), a celebration screen appears.
+  - Player is prompted to take a selfie using the webcam.
+  - Confetti and mascot animation play with sound: “Congratulations!” (accessible toggle for sound).
 
-**Use Lovable**
+## 🌈 Visual and Interaction Design
+- Large glass-like bubbles with GLSL shaders for reflection and fluid motion.
+- Bold, solid-colored butterflies with minimal contrast backgrounds for clarity.
+- All interactions are one-tap, no dragging or complex gestures.
+- Framer Motion for soft floating and bounce effects.
+- Lottie for magical, expressive butterfly flight.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/929224a2-1652-4412-b6c7-3d73ec1894f6) and start prompting.
+## ♿ Accessibility Features
+- One-finger tap to play
+- Large hitboxes on bubbles
+- No timers or penalties
+- Friendly narration and optional sound toggle
+- Calming visuals and motion, friendly voiceovers
 
-Changes made via Lovable will be committed automatically to this repo.
+## 🚀 Getting Started
 
-**Use your preferred IDE**
+1. **Install dependencies:**
+   ```sh
+   npm install
+   ```
+2. **Start the development server:**
+   ```sh
+   npm run dev
+   ```
+3. **Open your browser:**
+   Visit `http://localhost:8080` (or as indicated in your terminal)
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+---
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/929224a2-1652-4412-b6c7-3d73ec1894f6) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+Enjoy freeing butterflies and celebrating every victory!
