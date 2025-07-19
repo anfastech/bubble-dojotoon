@@ -45,8 +45,11 @@ const GlassBubble = ({ position, onClick, children, scale = 1 }) => {
           thickness={0.5}
           ior={1.33}
         />
+        {/* Butterfly inside the bubble mesh */}
+        <group position={[0, 0, 0]}>
+          {children}
+        </group>
       </mesh>
-      {children}
     </group>
   );
 };
