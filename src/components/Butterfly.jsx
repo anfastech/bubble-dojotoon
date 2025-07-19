@@ -1,10 +1,20 @@
-import React, { useRef } from 'react';
-import { useFrame } from '@react-three/fiber';
+import React, { useRef, useMemo } from 'react';
+import { useFrame, useLoader } from '@react-three/fiber';
 import { motion } from 'framer-motion';
 import * as THREE from 'three';
 
 const Butterfly = ({ image, position, isFlying = false, onAnimationComplete }) => {
   const meshRef = useRef();
+  
+  // Load texture only when needed
+  const texture = useMemo(() => {
+    if (isFlying) return null;
+    const loader = new THREE.TextureLoader();
+    const tex = loader.load(image);
+    tex.magFilter = THREE.LinearFilter;
+    tex.minFilter = THREE.LinearFilter;
+    return tex;
+  }, [image, isFlying]);
 
   useFrame((state) => {
     if (meshRef.current && !isFlying) {
@@ -57,11 +67,13 @@ const Butterfly = ({ image, position, isFlying = false, onAnimationComplete }) =
   }
 
   return (
-    <sprite ref={meshRef} scale={[1, 1, 1]} position={[0, 0, 0.1]}>
+    <sprite ref={meshRef} scale={[1.2, 1.2, 1.2]} position={[0, 0, 0.2]}>
       <spriteMaterial 
-        map={new THREE.TextureLoader().load(image)}
+        map={texture}
         transparent 
-        opacity={0.9} 
+        opacity={1.0}
+        alphaTest={0.1}
+        side={THREE.DoubleSide}
       />
     </sprite>
   );

@@ -200,7 +200,13 @@ const BubbleDojotoon = () => {
             position={bubble.position}
             scale={bubble.scale}
             onClick={() => handleBubblePop(bubble.id)}
-          />
+          >
+            <Butterfly
+              image={bubble.butterfly}
+              position={[0, 0, 0]}
+              isFlying={false}
+            />
+          </GlassBubble>
         ))}
       </Canvas>
 
