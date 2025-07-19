@@ -7,14 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Volume2, VolumeX, RotateCcw } from 'lucide-react';
 import GlassBubble from './GlassBubble';
-import Butterfly from './Butterfly';
 import CelebrationScreen from './CelebrationScreen';
-
-import butterfly1 from '@/assets/butterfly-1.png';
-import butterfly2 from '@/assets/butterfly-2.png';
-import butterfly3 from '@/assets/butterfly-3.png';
-
-const butterflies = [butterfly1, butterfly2, butterfly3];
 
 const BubbleDojotoon = () => {
   const [gameStarted, setGameStarted] = useState(false);
@@ -30,9 +23,9 @@ const BubbleDojotoon = () => {
 
   const generateRandomPosition = () => {
     return [
-      (Math.random() - 0.5) * 6, // x: -3 to 3 (reduced range)
-      (Math.random() - 0.5) * 4, // y: -2 to 2 (reduced range)
-      0 // z: keep at 0
+      (Math.random() - 0.5) * 6,
+      (Math.random() - 0.5) * 4,
+      0
     ];
   };
 
@@ -40,8 +33,8 @@ const BubbleDojotoon = () => {
     return {
       id: Math.random().toString(36).substr(2, 9),
       position: generateRandomPosition(),
-      butterfly: butterflies[Math.floor(Math.random() * butterflies.length)],
-      scale: 0.8 + Math.random() * 0.4, // 0.8 to 1.2 scale (smaller bubbles)
+      scale: 0.8 + Math.random() * 0.4,
+      index: Math.floor(Math.random() * 3), // for shader variety if needed
     };
   };
 
@@ -64,8 +57,9 @@ const BubbleDojotoon = () => {
     // Add flying butterfly animation
     const flyingButterfly = {
       id: Math.random().toString(36).substr(2, 9),
-      image: poppedBubble.butterfly,
-      position: [screenX - 60, screenY - 60], // Center the butterfly
+      position: [screenX - 60, screenY - 60],
+      scale: poppedBubble.scale,
+      index: poppedBubble.index,
     };
 
     setFlyingButterflies(prev => [...prev, flyingButterfly]);
@@ -79,11 +73,10 @@ const BubbleDojotoon = () => {
     setFreedButterflies(prev => prev + 1);
     setScore(prev => prev + 100);
 
-    // Play pop sound (if not muted)
     if (!isMuted) {
       const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmM=');
       audio.volume = 0.3;
-      audio.play().catch(() => {}); // Ignore autoplay restrictions
+      audio.play().catch(() => {});
     }
   }, [bubbles, isMuted]);
 
@@ -114,7 +107,6 @@ const BubbleDojotoon = () => {
     resetGame();
   };
 
-  // Check for victory
   useEffect(() => {
     if (freedButterflies >= TARGET_BUTTERFLIES) {
       setShowCelebration(true);
@@ -194,43 +186,42 @@ const BubbleDojotoon = () => {
           <ambientLight intensity={0.6} />
           <pointLight position={[10, 10, 10]} intensity={0.8} />
           <pointLight position={[-10, -10, 10]} intensity={0.4} />
-          
           <OrbitControls 
             enableZoom={false} 
             enablePan={false} 
             enableRotate={false}
             enabled={false}
           />
-          
-          {bubbles.map((bubble) => (
+          {bubbles.map((bubble, i) => (
             <GlassBubble
               key={bubble.id}
               position={bubble.position}
               scale={bubble.scale}
+              butterflyProps={{
+                index: bubble.index,
+                size: bubble.scale * 0.8,
+                isFlying: false,
+                onFlyComplete: () => handleButterflyAnimationComplete(flyingButterflies[flyingButterflies.length - 1]?.id)
+              }}
               onClick={() => handleBubblePop(bubble.id)}
-            >
-              <Butterfly
-                image={bubble.butterfly}
-                position={[0, 0, 0]}
-                isFlying={false}
-              />
-            </GlassBubble>
+            />
+          ))}
+          {/* Flying Butterflies */}
+          {flyingButterflies.map((butterfly, i) => (
+            <GlassBubble
+              key={butterfly.id}
+              position={[0, 0, 0]}
+              scale={butterfly.scale}
+              butterflyProps={{
+                index: butterfly.index,
+                size: butterfly.scale * 0.8,
+                isFlying: true,
+                onFlyComplete: () => handleButterflyAnimationComplete(butterfly.id)
+              }}
+            />
           ))}
         </Canvas>
       </div>
-
-      {/* Flying Butterflies */}
-      <AnimatePresence>
-        {flyingButterflies.map((butterfly) => (
-          <Butterfly
-            key={butterfly.id}
-            image={butterfly.image}
-            position={butterfly.position}
-            isFlying={true}
-            onAnimationComplete={() => handleButterflyAnimationComplete(butterfly.id)}
-          />
-        ))}
-      </AnimatePresence>
 
       {/* Celebration Screen */}
       <AnimatePresence>
@@ -238,7 +229,7 @@ const BubbleDojotoon = () => {
           <CelebrationScreen
             score={score}
             onComplete={handleCelebrationComplete}
-            butterflyImage={butterflies[0]}
+            butterflyImage={null}
           />
         )}
       </AnimatePresence>

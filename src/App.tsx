@@ -5,6 +5,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index.jsx";
 import NotFound from "./pages/NotFound";
+import ButterflyTest from "./pages/ButterflyTest";
+import BubbleTest from "./pages/BubbleTest";
+import GlassBubbleTest from "./pages/GlassBubbleTest";
 
 const queryClient = new QueryClient();
 
@@ -16,6 +19,9 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/ButterflyTest" element={<ButterflyTest />} />
+          <Route path="/BubbleTest" element={<BubbleTest />} />
+          <Route path="/GlassBubbleTest" element={<GlassBubbleTest />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
