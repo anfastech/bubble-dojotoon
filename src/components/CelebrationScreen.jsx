@@ -5,21 +5,9 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import dojoMascot from '@/assets/dojo-mascot.png';
 
-interface CelebrationScreenProps {
-  level: number;
-  score: number;
-  onComplete: () => void;
-  isMuted: boolean;
-}
-
-const CelebrationScreen: React.FC<CelebrationScreenProps> = ({
-  level,
-  score,
-  onComplete,
-  isMuted
-}) => {
+const CelebrationScreen = ({ score, onComplete, butterflyImage }) => {
   const [showSelfie, setShowSelfie] = useState(false);
-  const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
+  const [videoStream, setVideoStream] = useState(null);
   const [photoTaken, setPhotoTaken] = useState(false);
   const { toast } = useToast();
 
@@ -34,19 +22,17 @@ const CelebrationScreen: React.FC<CelebrationScreenProps> = ({
 
   // Play celebration audio
   useEffect(() => {
-    if (!isMuted) {
-      // Placeholder for celebration sound
-      console.log('🎵 Congratulations! Level complete!');
-      
-      // Text-to-speech congratulations (if available)
-      if ('speechSynthesis' in window) {
-        const utterance = new SpeechSynthesisUtterance('Congratulations, dojo hero! You freed all the birds!');
-        utterance.rate = 0.8;
-        utterance.pitch = 1.2;
-        speechSynthesis.speak(utterance);
-      }
+    // Placeholder for celebration sound
+    console.log('🎵 Congratulations! All butterflies freed!');
+    
+    // Text-to-speech congratulations (if available)
+    if ('speechSynthesis' in window) {
+      const utterance = new SpeechSynthesisUtterance('Congratulations! You freed all the butterflies!');
+      utterance.rate = 0.8;
+      utterance.pitch = 1.2;
+      speechSynthesis.speak(utterance);
     }
-  }, [isMuted]);
+  }, []);
 
   // Camera access for selfie
   const startCamera = async () => {
@@ -76,7 +62,7 @@ const CelebrationScreen: React.FC<CelebrationScreenProps> = ({
     setPhotoTaken(true);
     toast({
       title: "Perfect! 📸",
-      description: "Great selfie, hero!",
+      description: "Great selfie, butterfly hero!",
     });
   };
 
@@ -144,11 +130,11 @@ const CelebrationScreen: React.FC<CelebrationScreenProps> = ({
               animate={{ y: [0, -5, 0] }}
               transition={{ duration: 1, repeat: Infinity }}
             >
-              🎉 Amazing! 🎉
+              🎉 All Butterflies Freed! 🎉
             </motion.h1>
             
-            <p className="text-xl text-foreground mb-2">
-              Level {level} Complete!
+            <p className="text-xl text-muted-foreground mb-6">
+              Amazing work! You freed all the butterflies! 🦋
             </p>
             <p className="text-lg text-muted-foreground mb-6">
               Score: {score} points
@@ -171,7 +157,7 @@ const CelebrationScreen: React.FC<CelebrationScreenProps> = ({
                 size="lg"
                 className="w-full text-lg"
               >
-                Continue Adventure! ✨
+                Play Again! ✨
               </Button>
             </div>
           </motion.div>
@@ -237,7 +223,7 @@ const CelebrationScreen: React.FC<CelebrationScreenProps> = ({
               
               <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
                 <p className="text-white text-lg font-bold text-center bg-black/50 px-4 py-2 rounded-full">
-                  Level {level} Hero! 🦸‍♀️
+                  Butterfly Hero! 🦋
                 </p>
               </div>
             </div>
