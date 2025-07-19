@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { OrbitControls } from '@react-three/drei';
@@ -29,8 +30,8 @@ const BubbleDojotoon = () => {
 
   const generateRandomPosition = () => {
     return [
-      (Math.random() - 0.5) * 8, // x: -4 to 4
-      (Math.random() - 0.5) * 6, // y: -3 to 3
+      (Math.random() - 0.5) * 6, // x: -3 to 3 (reduced range)
+      (Math.random() - 0.5) * 4, // y: -2 to 2 (reduced range)
       0 // z: keep at 0
     ];
   };
@@ -40,7 +41,7 @@ const BubbleDojotoon = () => {
       id: Math.random().toString(36).substr(2, 9),
       position: generateRandomPosition(),
       butterfly: butterflies[Math.floor(Math.random() * butterflies.length)],
-      scale: 1.5 + Math.random() * 0.5, // 1.5 to 2.0 scale
+      scale: 0.8 + Math.random() * 0.4, // 0.8 to 1.2 scale (smaller bubbles)
     };
   };
 
@@ -56,14 +57,15 @@ const BubbleDojotoon = () => {
     const poppedBubble = bubbles.find(b => b.id === bubbleId);
     if (!poppedBubble) return;
 
+    // Calculate screen position more accurately
+    const screenX = window.innerWidth / 2 + (poppedBubble.position[0] / 6) * (window.innerWidth / 2);
+    const screenY = window.innerHeight / 2 - (poppedBubble.position[1] / 4) * (window.innerHeight / 2);
+
     // Add flying butterfly animation
     const flyingButterfly = {
       id: Math.random().toString(36).substr(2, 9),
       image: poppedBubble.butterfly,
-      position: [
-        window.innerWidth / 2 + poppedBubble.position[0] * 100,
-        window.innerHeight / 2 - poppedBubble.position[1] * 100,
-      ],
+      position: [screenX - 60, screenY - 60], // Center the butterfly
     };
 
     setFlyingButterflies(prev => [...prev, flyingButterfly]);
@@ -183,32 +185,39 @@ const BubbleDojotoon = () => {
         </Button>
       </div>
 
-      {/* 3D Scene */}
-      <Canvas
-        camera={{ position: [0, 0, 10], fov: 50 }}
-        style={{ background: 'transparent' }}
-      >
-        <ambientLight intensity={0.6} />
-        <pointLight position={[10, 10, 10]} intensity={0.8} />
-        <pointLight position={[-10, -10, 10]} intensity={0.4} />
-        
-        <OrbitControls enableZoom={false} enablePan={false} enableRotate={false} />
-        
-        {bubbles.map((bubble) => (
-          <GlassBubble
-            key={bubble.id}
-            position={bubble.position}
-            scale={bubble.scale}
-            onClick={() => handleBubblePop(bubble.id)}
-          >
-            <Butterfly
-              image={bubble.butterfly}
-              position={[0, 0, 0]}
-              isFlying={false}
-            />
-          </GlassBubble>
-        ))}
-      </Canvas>
+      {/* 3D Scene - Full screen canvas */}
+      <div className="absolute inset-0 w-full h-full">
+        <Canvas
+          camera={{ position: [0, 0, 8], fov: 60 }}
+          style={{ width: '100%', height: '100%' }}
+        >
+          <ambientLight intensity={0.6} />
+          <pointLight position={[10, 10, 10]} intensity={0.8} />
+          <pointLight position={[-10, -10, 10]} intensity={0.4} />
+          
+          <OrbitControls 
+            enableZoom={false} 
+            enablePan={false} 
+            enableRotate={false}
+            enabled={false}
+          />
+          
+          {bubbles.map((bubble) => (
+            <GlassBubble
+              key={bubble.id}
+              position={bubble.position}
+              scale={bubble.scale}
+              onClick={() => handleBubblePop(bubble.id)}
+            >
+              <Butterfly
+                image={bubble.butterfly}
+                position={[0, 0, 0]}
+                isFlying={false}
+              />
+            </GlassBubble>
+          ))}
+        </Canvas>
+      </div>
 
       {/* Flying Butterflies */}
       <AnimatePresence>

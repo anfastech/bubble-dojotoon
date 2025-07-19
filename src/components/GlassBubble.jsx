@@ -1,3 +1,4 @@
+
 import React, { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -8,8 +9,8 @@ const GlassBubble = ({ position, onClick, children, scale = 1 }) => {
   useFrame((state) => {
     if (meshRef.current) {
       // Gentle floating animation
-      meshRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 0.5) * 0.2;
-      meshRef.current.position.x = position[0] + Math.cos(state.clock.elapsedTime * 0.3) * 0.1;
+      meshRef.current.position.y = position[1] + Math.sin(state.clock.elapsedTime * 0.5) * 0.1;
+      meshRef.current.position.x = position[0] + Math.cos(state.clock.elapsedTime * 0.3) * 0.05;
       meshRef.current.rotation.y = state.clock.elapsedTime * 0.1;
     }
   });
@@ -19,6 +20,7 @@ const GlassBubble = ({ position, onClick, children, scale = 1 }) => {
       new THREE.Color(0.4, 0.8, 1.0), // Blue
       new THREE.Color(0.8, 0.4, 1.0), // Purple
       new THREE.Color(0.4, 1.0, 0.8), // Green
+      new THREE.Color(1.0, 0.8, 0.4), // Orange
     ];
     return colors[Math.floor(Math.random() * colors.length)];
   }, []);
