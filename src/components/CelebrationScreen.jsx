@@ -4,8 +4,16 @@ import { Camera, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import dojoMascot from '@/assets/dojo-mascot.png';
+import butterfly1 from '@/assets/butterfly-1.png';
+import butterfly2 from '@/assets/butterfly-2.png';
 
-const CelebrationScreen = ({ score, onComplete, butterflyImage, overlays = [], onSelfieCaptured }) => {
+const defaultOverlays = [
+  { src: butterfly1, x: 50, y: 50, width: 80, height: 80 },
+  { src: butterfly2, x: 200, y: 100, width: 60, height: 60 },
+];
+
+const CelebrationScreen = ({ score, onComplete, butterflyImage, overlays, onSelfieCaptured }) => {
+  const effectiveOverlays = overlays === undefined ? defaultOverlays : overlays;
   const [showSelfie, setShowSelfie] = useState(false);
   const [videoStream, setVideoStream] = useState(null);
   const [photoTaken, setPhotoTaken] = useState(false);
@@ -111,11 +119,11 @@ const CelebrationScreen = ({ score, onComplete, butterflyImage, overlays = [], o
       link.click();
       document.body.removeChild(link);
     };
-    if (!overlays.length) {
+    if (!effectiveOverlays.length) {
       finish();
       return;
     }
-    overlays.forEach(b => {
+    effectiveOverlays.forEach(b => {
       const img = new window.Image();
       img.src = b.src;
       img.onload = () => {
@@ -127,13 +135,13 @@ const CelebrationScreen = ({ score, onComplete, butterflyImage, overlays = [], o
           b.height
         );
         loaded += 1;
-        if (loaded === overlays.length) {
+        if (loaded === effectiveOverlays.length) {
           finish();
         }
       };
       img.onerror = () => {
         loaded += 1;
-        if (loaded === overlays.length) {
+        if (loaded === effectiveOverlays.length) {
           finish();
         }
       };
@@ -309,7 +317,7 @@ const CelebrationScreen = ({ score, onComplete, butterflyImage, overlays = [], o
                     className="rounded-xl"
                     onLoadedMetadata={handleLoadedMetadata}
                   />
-                  {overlays.map((b, i) => (
+                  {effectiveOverlays.map((b, i) => (
                     <img
                       key={i}
                       src={b.src}
@@ -339,12 +347,12 @@ const CelebrationScreen = ({ score, onComplete, butterflyImage, overlays = [], o
                     Download Photo
                   </a>
                   <Button onClick={() => {
-  setPhotoTaken(false);
-  setSelfieImage(null);
-  setRetakeCount(c => c + 1);
-}} style={{ marginLeft: 8 }}>
-  Retake
-</Button>
+                    setPhotoTaken(false);
+                    setSelfieImage(null);
+                    setRetakeCount(c => c + 1);
+                  }} style={{ marginLeft: 8 }}>
+                    Retake
+                  </Button>
                 </div>
               )}
               {/* Camera controls */}
