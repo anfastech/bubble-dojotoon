@@ -2,12 +2,19 @@ import React, { useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import Butterfly from '../components/Butterfly';
 
+const COLOR_GROUPS = [
+  { name: 'Red/Orange', index: 0 },
+  { name: 'Yellow/Green', index: 2 },
+  { name: 'Blue/Cyan', index: 4 },
+  { name: 'Purple', index: 6 },
+];
+
 const ButterflyTest = () => {
   const [size, setSize] = useState(1);
-  const [index, setIndex] = useState(0);
+  const [colorGroup, setColorGroup] = useState(2); // index in COLOR_GROUPS
 
   return (
-    <div style={{ width: '100vw', height: '100vh', background: '#eef' }}>
+    <div style={{ width: '100vw', height: '100vh' }}>
       <div style={{ position: 'absolute', top: 20, left: 20, zIndex: 10 }}>
         <label>
           Size:
@@ -22,21 +29,38 @@ const ButterflyTest = () => {
           />
           {size.toFixed(2)}
         </label>
-        <label style={{ marginLeft: 20 }}>
-          Index:
-          <input
-            type="number"
-            min={0}
-            max={5}
-            value={index}
-            onChange={e => setIndex(Number(e.target.value))}
-            style={{ width: 40, marginLeft: 5 }}
-          />
-        </label>
+        <div style={{ marginTop: 16 }}>
+          Color Group:
+          {COLOR_GROUPS.map((group, i) => (
+            <button
+              key={group.name}
+              onClick={() => setColorGroup(i)}
+              style={{
+                marginLeft: 10,
+                padding: '4px 12px',
+                borderRadius: 6,
+                border: colorGroup === i ? '2px solid #333' : '1px solid #aaa',
+                background: colorGroup === i ? '#fff' : '#eee',
+                fontWeight: colorGroup === i ? 'bold' : 'normal',
+                cursor: 'pointer',
+              }}
+            >
+              {group.name}
+            </button>
+          ))}
+        </div>
+        <div style={{ marginTop: 8, fontWeight: 'bold' }}>
+          Current: {COLOR_GROUPS[colorGroup].name} (Index: {COLOR_GROUPS[colorGroup].index})
+        </div>
       </div>
       <Canvas camera={{ position: [0, 0, 5], fov: 60 }}>
         <ambientLight intensity={0.8} />
-        <Butterfly index={index} size={size} position={[0, 0, 0.2]} />
+        <Butterfly 
+          key={`butterfly-${colorGroup}`}
+          index={COLOR_GROUPS[colorGroup].index} 
+          size={size} 
+          position={[0, 0, 0.2]} 
+        />
       </Canvas>
     </div>
   );

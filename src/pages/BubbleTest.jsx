@@ -4,28 +4,37 @@ import { Environment, Shadow, OrbitControls, Float, MeshDistortMaterial } from '
 
 function Bubble({ scale }) {
   return (
-    <mesh scale={scale}>
-      <sphereGeometry args={[1, 64, 64]} />
-      <MeshDistortMaterial
-        distort={0.25}
-        transmission={1.05}
-        thickness={-0.5}
-        roughness={0}
-        iridescence={1}
-        iridescenceIOR={1}
-        iridescenceThicknessRange={[0, 1200]}
-        clearcoat={1}
-        clearcoatRoughness={0}
-        envMapIntensity={1.5}
-      />
-    </mesh>
+    <group scale={scale}>
+      <mesh>
+        <sphereGeometry args={[1, 64, 64]} />
+        <MeshDistortMaterial
+          distort={0.1}
+          transmission={0.9}
+          thickness={0.5}
+          roughness={0.1}
+          iridescence={0.8}
+          iridescenceIOR={1.3}
+          iridescenceThicknessRange={[100, 800]}
+          clearcoat={1}
+          clearcoatRoughness={0.1}
+          envMapIntensity={1}
+          color="#ffffff"
+          opacity={0.3}
+          transparent={true}
+        />
+      </mesh>
+      <mesh position={[0, 0, 0.3]}>
+        <boxGeometry args={[0.5, 0.5, 0.1]} />
+        <meshStandardMaterial color="red" />
+      </mesh>
+    </group>
   );
 }
 
 const BubbleTest = () => {
   const [size, setSize] = useState(1);
   return (
-    <div style={{ width: '100vw', height: '100vh', background: '#eef' }}>
+    <div style={{ width: '100vw', height: '100vh', background: '#1e3a8a' }}>
       <div style={{ position: 'absolute', top: 20, left: 20, zIndex: 10 }}>
         <label>
           Size:
@@ -45,9 +54,9 @@ const BubbleTest = () => {
         <Float floatIntensity={1.5} speed={0.5}>
           <Bubble scale={size} />
         </Float>
-        <Shadow scale={2} position={[0, -1.35, 0]} opacity={0.15} />
+        {/* <Shadow scale={2} position={[0, -1.35, 0]} opacity={0.15} /> */}
         <OrbitControls />
-        <Environment preset="apartment" background blur={1} />
+        <Environment preset="apartment" background={false} blur={1} />
       </Canvas>
     </div>
   );
