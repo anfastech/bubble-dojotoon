@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Camera, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,8 @@ const CelebrationScreen = ({ score, onComplete, butterflyImage }) => {
   const [showSelfie, setShowSelfie] = useState(false);
   const [videoStream, setVideoStream] = useState(null);
   const [photoTaken, setPhotoTaken] = useState(false);
+  const [selfieImage, setSelfieImage] = useState(null);
+  const videoRef = useRef(null);
   const { toast } = useToast();
 
   // Confetti particles
@@ -33,6 +35,12 @@ const CelebrationScreen = ({ score, onComplete, butterflyImage }) => {
       speechSynthesis.speak(utterance);
     }
   }, []);
+
+  useEffect(() => {
+    if (videoRef.current && videoStream) {
+      videoRef.current.srcObject = videoStream;
+    }
+  }, [videoStream]);
 
   // Camera access for selfie
   const startCamera = async () => {
@@ -59,11 +67,27 @@ const CelebrationScreen = ({ score, onComplete, butterflyImage }) => {
   };
 
   const takeSelfie = () => {
-    setPhotoTaken(true);
-    toast({
-      title: "Perfect! 📸",
-      description: "Great selfie, butterfly hero!",
-    });
+    if (videoRef.current) {
+      const video = videoRef.current;
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const imageData = canvas.toDataURL('image/png');
+      setSelfieImage(imageData);
+      setPhotoTaken(true);
+      toast({
+        title: "Perfect! 📸",
+        description: "Great selfie, butterfly hero!",
+      });
+    } else {
+      setPhotoTaken(true);
+      toast({
+        title: "Perfect! 📸",
+        description: "Great selfie, butterfly hero!",
+      });
+    }
   };
 
   return (
@@ -216,15 +240,12 @@ const CelebrationScreen = ({ score, onComplete, butterflyImage }) => {
               <div className="relative bg-gray-900 rounded-xl overflow-hidden mb-4">
                 {videoStream ? (
                   <video
+                    key={showSelfie + '-' + (videoStream ? videoStream.id || 'stream' : 'nostream')}
                     autoPlay
                     playsInline
                     muted
                     className="w-full h-48 sm:h-64 object-cover"
-                    ref={(video) => {
-                      if (video && videoStream) {
-                        video.srcObject = videoStream;
-                      }
-                    }}
+                    ref={videoRef}
                   />
                 ) : (
                   <div className="w-full h-48 sm:h-64 bg-gray-200 flex items-center justify-center">
