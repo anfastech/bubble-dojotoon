@@ -8,6 +8,7 @@ import NotFound from "./pages/NotFound";
 import ButterflyTest from "./pages/ButterflyTest";
 import BubbleTest from "./pages/BubbleTest";
 import GlassBubbleTest from "./pages/GlassBubbleTest";
+import ManyBubblesTest from "./pages/ManyBubblesTest";
 
 const queryClient = new QueryClient();
 
@@ -22,6 +23,7 @@ const App = () => (
           <Route path="/ButterflyTest" element={<ButterflyTest />} />
           <Route path="/BubbleTest" element={<BubbleTest />} />
           <Route path="/GlassBubbleTest" element={<GlassBubbleTest />} />
+          <Route path="/ManyBubblesTest" element={<ManyBubblesTest />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

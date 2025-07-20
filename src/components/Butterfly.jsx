@@ -1,4 +1,4 @@
-import React, { useRef, useMemo } from 'react';
+import React, { useRef, useMemo, useEffect } from 'react';
 import { useFrame, useLoader } from '@react-three/fiber';
 import * as THREE from 'three';
 
@@ -113,49 +113,72 @@ void main() {
 }
 `;
 
-const Butterfly = ({ index = 0, size = 1, isFlying = false, onFlyComplete, position }) => {
+const Butterfly = ({ index = 0, size = 1, isFlying = false, onFlyComplete, position, debug = false }) => {
   // Clamp index and size to safe values
   const safeIndex = isNaN(index) ? 0 : Math.max(0, Math.min(index, 6));
   const safeSize = isNaN(size) ? 1 : Math.max(0.1, Math.min(size, 5));
   const meshRef = useRef();
+  const materialRef = useRef();
   
-  // Load texture with proper async handling
-  let texture = null;
-  try {
-    // Use a simple white texture as default, then try to load the real texture
-    const canvas = document.createElement('canvas');
-    canvas.width = 64;
-    canvas.height = 64;
-    const ctx = canvas.getContext('2d');
-    ctx.fillStyle = 'white';
-    ctx.fillRect(0, 0, 64, 64);
-    texture = new THREE.CanvasTexture(canvas);
-    
-    // Try to load the real texture asynchronously
-    const textureLoader = new THREE.TextureLoader();
-    textureLoader.load(
-      '/butterfly-tex.png',
-      (loadedTexture) => {
-        // Successfully loaded the real texture
-        loadedTexture.wrapS = THREE.ClampToEdgeWrapping;
-        loadedTexture.wrapT = THREE.ClampToEdgeWrapping;
-        loadedTexture.minFilter = THREE.LinearFilter;
-        loadedTexture.magFilter = THREE.LinearFilter;
-        texture = loadedTexture;
-        // Update the uniform if the mesh is still there
-        if (meshRef.current) {
-          meshRef.current.material.uniforms.texture.value = texture;
+  // Store flight parameters for smooth random movement
+  const flightParamsRef = useRef({
+    startTime: 0,
+    currentDirection: { x: 0, y: 0, z: 0.3 },
+    targetDirection: { x: 0, y: 0, z: 0.3 },
+    directionChangeTime: 0,
+    speed: 1.5 + Math.random() * 0.5,
+    centerX: 0,
+    centerY: 0,
+    centerZ: 0,
+  });
+  
+  // Create stable texture with better error handling
+  const texture = useMemo(() => {
+    try {
+      // Create a simple white texture as default
+      const canvas = document.createElement('canvas');
+      canvas.width = 64;
+      canvas.height = 64;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = 'white';
+      ctx.fillRect(0, 0, 64, 64);
+      const defaultTexture = new THREE.CanvasTexture(canvas);
+      
+      // Try to load the real texture asynchronously
+      const textureLoader = new THREE.TextureLoader();
+      textureLoader.load(
+        '/butterfly-tex.png',
+        (loadedTexture) => {
+          // Successfully loaded the real texture
+          loadedTexture.wrapS = THREE.ClampToEdgeWrapping;
+          loadedTexture.wrapT = THREE.ClampToEdgeWrapping;
+          loadedTexture.minFilter = THREE.LinearFilter;
+          loadedTexture.magFilter = THREE.LinearFilter;
+          // Update the uniform if the material is still there
+          if (materialRef.current) {
+            materialRef.current.uniforms.texture.value = loadedTexture;
+          }
+        },
+        undefined,
+        (error) => {
+          console.warn('Failed to load butterfly texture, using fallback:', error);
+          // Keep using the default texture
         }
-      },
-      undefined,
-      (error) => {
-        console.warn('Failed to load butterfly texture, using fallback:', error);
-        // Keep using the white texture fallback
-      }
-    );
-  } catch (error) {
-    console.warn('Error setting up texture:', error);
-  }
+      );
+      
+      return defaultTexture;
+    } catch (error) {
+      console.warn('Error creating texture:', error);
+      // Return a simple white texture as ultimate fallback
+      const canvas = document.createElement('canvas');
+      canvas.width = 64;
+      canvas.height = 64;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = 'white';
+      ctx.fillRect(0, 0, 64, 64);
+      return new THREE.CanvasTexture(canvas);
+    }
+  }, []);
   
   // Create stable uniforms that don't change on re-render
   const uniforms = useMemo(() => ({
@@ -165,7 +188,16 @@ const Butterfly = ({ index = 0, size = 1, isFlying = false, onFlyComplete, posit
     texture: { value: texture },
   }), [texture]);
 
-  // Animate butterfly with gentle random floating inside the bubble
+  // Cleanup texture on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (texture && texture.dispose) {
+        texture.dispose();
+      }
+    };
+  }, [texture]);
+
+  // Animate butterfly with smooth circular flight
   useFrame((state, delta) => {
     uniforms.time.value += delta;
     // Update uniforms dynamically without causing re-renders
@@ -173,17 +205,79 @@ const Butterfly = ({ index = 0, size = 1, isFlying = false, onFlyComplete, posit
     uniforms.size.value = safeSize;
     
     if (meshRef.current) {
-      // Keep butterfly in fixed position - no floating animation
-      meshRef.current.position.x = position?.[0] || 0;
-      meshRef.current.position.y = position?.[1] || 0;
-      meshRef.current.position.z = position?.[2] !== undefined ? position[2] : 0.2;
-      // Keep rotation at 0 to prevent visibility issues
-      meshRef.current.rotation.set(0, 0, 0);
-    }
-    if (isFlying && meshRef.current) {
-      meshRef.current.position.z += delta * 10;
-      if (meshRef.current.position.z > 10 && onFlyComplete) {
-        onFlyComplete();
+      if (isFlying) {
+        // Initialize flight parameters when starting to fly
+        if (flightParamsRef.current.startTime === 0) {
+          flightParamsRef.current.startTime = state.clock.elapsedTime;
+          flightParamsRef.current.centerX = meshRef.current.position.x;
+          flightParamsRef.current.centerY = meshRef.current.position.y;
+          flightParamsRef.current.centerZ = meshRef.current.position.z;
+        }
+        
+        const params = flightParamsRef.current;
+        const elapsed = state.clock.elapsedTime - params.startTime;
+        
+        // Change direction randomly every 2-4 seconds
+        if (elapsed - params.directionChangeTime > 2 + Math.random() * 2) {
+          params.targetDirection = {
+            x: (Math.random() - 0.5) * 2,
+            y: (Math.random() - 0.5) * 2,
+            z: 0.2 + Math.random() * 0.6, // Always move forward a bit
+          };
+          params.directionChangeTime = elapsed;
+        }
+        
+        // Smoothly interpolate between current and target direction
+        const lerpFactor = 0.02; // Very smooth transitions
+        params.currentDirection.x += (params.targetDirection.x - params.currentDirection.x) * lerpFactor;
+        params.currentDirection.y += (params.targetDirection.y - params.currentDirection.y) * lerpFactor;
+        params.currentDirection.z += (params.targetDirection.z - params.currentDirection.z) * lerpFactor;
+        
+        // Update position based on current direction
+        // Dynamic speed: fast initial burst, then steady
+        const initialBurstTime = 1.0; // 1 second of fast movement
+        const initialSpeed = params.speed * 3; // 3x faster initially
+        const steadySpeed = params.speed;
+        
+        let currentSpeed;
+        if (elapsed < initialBurstTime) {
+          // Fast initial burst phase
+          currentSpeed = initialSpeed;
+        } else {
+          // Steady phase
+          currentSpeed = steadySpeed;
+        }
+        
+        meshRef.current.position.x += params.currentDirection.x * currentSpeed * delta;
+        meshRef.current.position.y += params.currentDirection.y * currentSpeed * delta;
+        meshRef.current.position.z += params.currentDirection.z * currentSpeed * delta;
+        
+        // Smooth rotation based on movement direction
+        // Calculate the angle the butterfly should face based on movement direction
+        // The butterfly's "head" is at the top middle of the rectangle
+        const moveAngle = Math.atan2(params.currentDirection.x, params.currentDirection.z);
+        
+        // Immediately rotate the butterfly so its head points in the direction it's traveling
+        meshRef.current.rotation.y = moveAngle;
+        
+        // Keep Z rotation minimal to avoid backwards appearance when going down
+        meshRef.current.rotation.z = 0;
+        
+        // Check if butterfly has flown far enough
+        if (meshRef.current.position.z > 15 || 
+            Math.abs(meshRef.current.position.x) > 8 || 
+            Math.abs(meshRef.current.position.y) > 8) {
+          if (onFlyComplete) {
+            onFlyComplete();
+          }
+        }
+      } else {
+        // Keep butterfly in fixed position - no floating animation to prevent conflicts
+        meshRef.current.position.x = position?.[0] || 0;
+        meshRef.current.position.y = position?.[1] || 0;
+        meshRef.current.position.z = (position?.[2] !== undefined ? position[2] : 0.2);
+        // Keep rotation at 0 to prevent visibility issues
+        meshRef.current.rotation.set(0, 0, 0);
       }
     }
   });
@@ -192,13 +286,49 @@ const Butterfly = ({ index = 0, size = 1, isFlying = false, onFlyComplete, posit
     <mesh ref={meshRef} position={position || [0, 0, 0.2]}>
       <planeGeometry args={[safeSize, safeSize / 2, 24, 12]} />
       <rawShaderMaterial
+        ref={materialRef}
         uniforms={uniforms}
         vertexShader={vertexShader}
         fragmentShader={fragmentShader}
-        transparent
+        transparent 
         side={THREE.DoubleSide}
         depthWrite={false}
+        depthTest={true}
+        alphaTest={0.1}
       />
+      
+      {/* Debug points that follow the butterfly sprite exactly */}
+      {debug && (
+        <>
+          {/* Corner points */}
+          <mesh position={[-safeSize/2, safeSize/4, 0.01]}>
+            <sphereGeometry args={[0.02, 8, 8]} />
+            <meshBasicMaterial color="red" />
+          </mesh>
+          <mesh position={[safeSize/2, safeSize/4, 0.01]}>
+            <sphereGeometry args={[0.02, 8, 8]} />
+            <meshBasicMaterial color="green" />
+          </mesh>
+          <mesh position={[-safeSize/2, -safeSize/4, 0.01]}>
+            <sphereGeometry args={[0.02, 8, 8]} />
+            <meshBasicMaterial color="blue" />
+          </mesh>
+          <mesh position={[safeSize/2, -safeSize/4, 0.01]}>
+            <sphereGeometry args={[0.02, 8, 8]} />
+            <meshBasicMaterial color="yellow" />
+          </mesh>
+          
+          {/* Center points */}
+          <mesh position={[0, safeSize/4, 0.01]}>
+            <sphereGeometry args={[0.02, 8, 8]} />
+            <meshBasicMaterial color="purple" />
+          </mesh>
+          <mesh position={[0, -safeSize/4, 0.01]}>
+            <sphereGeometry args={[0.02, 8, 8]} />
+            <meshBasicMaterial color="orange" />
+          </mesh>
+        </>
+      )}
     </mesh>
   );
 };

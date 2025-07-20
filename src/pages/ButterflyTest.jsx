@@ -14,7 +14,7 @@ const ButterflyTest = () => {
   const [colorGroup, setColorGroup] = useState(2); // index in COLOR_GROUPS
 
   return (
-    <div style={{ width: '100vw', height: '100vh' }}>
+    <div style={{ width: '100vw', height: '100vh', background: 'transparent' }}>
       <div style={{ position: 'absolute', top: 20, left: 20, zIndex: 10 }}>
         <label>
           Size:
