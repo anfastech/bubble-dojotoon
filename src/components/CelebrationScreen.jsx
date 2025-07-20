@@ -6,10 +6,26 @@ import { useToast } from '@/hooks/use-toast';
 import dojoMascot from '@/assets/dojo-mascot.png';
 import butterfly1 from '@/assets/butterfly-1.png';
 import butterfly2 from '@/assets/butterfly-2.png';
+import butterfly3 from '@/assets/butterfly-3.png';
+import butterfly4 from '@/assets/butterfly-4.png';
 
+// Arrange butterflies in a celebratory arc and corners
 const defaultOverlays = [
-  { src: butterfly1, x: 50, y: 50, width: 80, height: 80 },
-  { src: butterfly2, x: 200, y: 100, width: 60, height: 60 },
+  // Corners
+  { src: butterfly1, x: 10, y: 10, width: 50, height: 50, rotate: -20 }, // top-left
+  { src: butterfly2, x: 290, y: 10, width: 50, height: 50, rotate: 20 }, // top-right
+  { src: butterfly3, x: 10, y: 202, width: 50, height: 50, rotate: 15 }, // bottom-left
+  { src: butterfly4, x: 290, y: 202, width: 50, height: 50, rotate: -15 }, // bottom-right
+
+  // Arc (top)
+  { src: butterfly2, x: 80, y: 30, width: 40, height: 40, rotate: 0 },
+  { src: butterfly3, x: 150, y: 15, width: 45, height: 45, rotate: 10 },
+  { src: butterfly4, x: 220, y: 30, width: 40, height: 40, rotate: -10 },
+
+  // Arc (bottom)
+  { src: butterfly1, x: 80, y: 180, width: 40, height: 40, rotate: 5 },
+  { src: butterfly2, x: 150, y: 195, width: 45, height: 45, rotate: -5 },
+  { src: butterfly3, x: 220, y: 180, width: 40, height: 40, rotate: 8 },
 ];
 
 const CelebrationScreen = ({ score, onComplete, butterflyImage, overlays, onSelfieCaptured }) => {
@@ -113,7 +129,7 @@ const CelebrationScreen = ({ score, onComplete, butterflyImage, overlays, onSelf
       });
       // Auto-download
       const link = document.createElement('a');
-      link.download = 'selfie.png';
+      link.download = 'dojoherohappy.png';
       link.href = imageData;
       document.body.appendChild(link);
       link.click();
@@ -146,6 +162,17 @@ const CelebrationScreen = ({ score, onComplete, butterflyImage, overlays, onSelf
         }
       };
     });
+  };
+
+  const containerStyle = {
+    position: 'relative',
+    width: '100%',
+    maxWidth: 350,
+    aspectRatio: '350 / 262',
+    margin: '0 auto',
+    background: '#222',
+    borderRadius: 16,
+    overflow: 'hidden',
   };
 
   return (
@@ -297,15 +324,7 @@ const CelebrationScreen = ({ score, onComplete, butterflyImage, overlays, onSelf
               {/* Camera view with overlays */}
               {!photoTaken && (
                 <div
-                  style={{
-                    position: 'relative',
-                    width: '100%',
-                    maxWidth: 350,
-                    aspectRatio: `${dimensions.width} / ${dimensions.height}`,
-                    margin: '0 auto',
-                    background: '#222',
-                  }}
-                  className="mx-auto"
+                  style={containerStyle}
                 >
                   <video
                     key={showSelfie + '-' + (videoStream ? videoStream.id || 'stream' : 'nostream') + '-' + retakeCount}
@@ -313,7 +332,7 @@ const CelebrationScreen = ({ score, onComplete, butterflyImage, overlays, onSelf
                     autoPlay
                     playsInline
                     muted
-                    style={{ width: '100%', height: 'auto', display: 'block', objectFit: 'cover' }}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} 
                     className="rounded-xl"
                     onLoadedMetadata={handleLoadedMetadata}
                   />
@@ -324,10 +343,11 @@ const CelebrationScreen = ({ score, onComplete, butterflyImage, overlays, onSelf
                       alt={`overlay-${i}`}
                       style={{
                         position: 'absolute',
-                        left: `${(b.x / dimensions.width) * 100}%`,
-                        top: `${(b.y / dimensions.height) * 100}%`,
-                        width: `${(b.width / dimensions.width) * 100}%`,
-                        height: `${(b.height / dimensions.height) * 100}%`,
+                        left: `${b.x}px`,
+                        top: `${b.y}px`,
+                        width: `${b.width}px`,
+                        height: `${b.height}px`,
+                        transform: `rotate(${b.rotate || 0}deg)`,
                         pointerEvents: 'none',
                         userSelect: 'none',
                       }}
@@ -337,13 +357,20 @@ const CelebrationScreen = ({ score, onComplete, butterflyImage, overlays, onSelf
               )}
               {/* Preview of captured image */}
               {photoTaken && selfieImage && (
-                <div style={{ textAlign: 'center' }}>
-                  <img
-                    src={selfieImage}
-                    alt="Selfie Preview"
-                    style={{ maxWidth: 350, borderRadius: 16, border: '2px solid #ccc', margin: '0 auto', width: '100%', height: 'auto' }}
-                  />
-                  <a href={selfieImage} download="selfie.png" style={{ display: 'block', marginTop: 8 }}>
+                <div style={{ textAlign: 'center', marginTop: 10, marginBottom: 10, width: '100%'  }}>
+                  <div style={containerStyle}>
+                    <img
+                      src={selfieImage}
+                      alt="Selfie Preview"
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        display: 'block',
+                      }}
+                    />
+                  </div>
+                  <a className='underline' href={selfieImage} download="dojoherohappy.png" style={{ display: 'block', marginTop: 8 }}>
                     Download Photo
                   </a>
                   <Button onClick={() => {

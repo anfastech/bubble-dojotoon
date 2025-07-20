@@ -2,11 +2,25 @@ import React, { useState } from 'react';
 import CelebrationScreen from '../components/CelebrationScreen';
 import butterfly1 from '@/assets/butterfly-1.png';
 import butterfly2 from '@/assets/butterfly-2.png';
+import butterfly3 from '@/assets/butterfly-3.png';
+import butterfly4 from '@/assets/butterfly-4.png';
 
 // Example overlays for testing
 const butterflies = [
-  { src: butterfly1, x: 50, y: 50, width: 80, height: 80 },
-  { src: butterfly2, x: 200, y: 100, width: 60, height: 60 },
+  // Top left, rotated -20deg
+  { src: butterfly1, x: 20, y: 20, width: 60, height: 60, rotate: -20 },
+  // Top right, rotated 25deg
+  { src: butterfly2, x: 250, y: 30, width: 60, height: 60, rotate: 25 },
+  // Bottom left, rotated 15deg
+  { src: butterfly3, x: 40, y: 180, width: 70, height: 70, rotate: 15 },
+  // Bottom right, rotated -30deg
+  { src: butterfly4, x: 230, y: 190, width: 70, height: 70, rotate: -30 },
+  // Center arc, upright
+  { src: butterfly2, x: 130, y: 70, width: 80, height: 80, rotate: 0 },
+  // Extra festive duplicates
+  { src: butterfly1, x: 90, y: 40, width: 50, height: 50, rotate: 10 },
+  { src: butterfly3, x: 200, y: 120, width: 50, height: 50, rotate: -15 },
+  { src: butterfly4, x: 120, y: 180, width: 60, height: 60, rotate: 20 },
 ];
 
 const CelebrationScreenTest = () => {
