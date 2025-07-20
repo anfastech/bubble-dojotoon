@@ -20,10 +20,10 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
-          <Route path="/ButterflyTest" element={<ButterflyTest />} />
-          <Route path="/BubbleTest" element={<BubbleTest />} />
-          <Route path="/GlassBubbleTest" element={<GlassBubbleTest />} />
-          <Route path="/ManyBubblesTest" element={<ManyBubblesTest />} />
+          <Route path="/butterflytest" element={<ButterflyTest />} />
+          <Route path="/bubbletest" element={<BubbleTest />} />
+          <Route path="/glassbubbletest" element={<GlassBubbleTest />} />
+          <Route path="/manybubblestest" element={<ManyBubblesTest />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
