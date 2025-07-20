@@ -1,19 +1,55 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls } from '@react-three/drei';
+import { OrbitControls, Environment, Float } from '@react-three/drei';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Volume2, VolumeX, RotateCcw } from 'lucide-react';
 import GlassBubble from './GlassBubble';
+import Butterfly from './Butterfly';
 import CelebrationScreen from './CelebrationScreen';
+
+const COLOR_GROUPS = [
+  { name: 'Red/Orange', index: 0 },
+  { name: 'Yellow/Green', index: 2 },
+  { name: 'Blue/Cyan', index: 4 },
+  { name: 'Purple', index: 6 },
+];
+
+// Standalone bubble component with individual state
+function StandaloneBubble({ bubble, onPop }) {
+  const [hasProducedButterfly, setHasProducedButterfly] = useState(false);
+
+  const handleBubbleClick = () => {
+    if (!hasProducedButterfly) {
+      setHasProducedButterfly(true);
+      onPop(bubble.id);
+    }
+  };
+
+  return (
+    <GlassBubble
+      position={bubble.position}
+      scale={bubble.scale}
+      onClick={handleBubbleClick}
+    >
+      <Butterfly 
+        key={`butterfly-${bubble.id}`}
+        index={COLOR_GROUPS[bubble.colorGroup].index} 
+        size={bubble.scale * 0.8} 
+        position={[0, 0, 0.4]} 
+      />
+    </GlassBubble>
+  );
+}
 
 const BubbleDojotoon = () => {
   const [gameStarted, setGameStarted] = useState(false);
   const [bubbles, setBubbles] = useState([]);
   const [freedButterflies, setFreedButterflies] = useState(0);
   const [flyingButterflies, setFlyingButterflies] = useState([]);
+  const [poppedBubbles, setPoppedBubbles] = useState(new Set());
   const [showCelebration, setShowCelebration] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
   const [score, setScore] = useState(0);
@@ -34,7 +70,7 @@ const BubbleDojotoon = () => {
       id: Math.random().toString(36).substr(2, 9),
       position: generateRandomPosition(),
       scale: 0.8 + Math.random() * 0.4,
-      index: Math.floor(Math.random() * 3), // for shader variety if needed
+      colorGroup: Math.floor(Math.random() * COLOR_GROUPS.length), // Random color group
     };
   };
 
@@ -44,31 +80,40 @@ const BubbleDojotoon = () => {
       newBubbles.push(createBubble());
     }
     setBubbles(newBubbles);
+    setPoppedBubbles(new Set());
   }, []);
 
   const handleBubblePop = useCallback((bubbleId) => {
     const poppedBubble = bubbles.find(b => b.id === bubbleId);
     if (!poppedBubble) return;
 
-    // Calculate screen position more accurately
-    const screenX = window.innerWidth / 2 + (poppedBubble.position[0] / 6) * (window.innerWidth / 2);
-    const screenY = window.innerHeight / 2 - (poppedBubble.position[1] / 4) * (window.innerHeight / 2);
-
-    // Add flying butterfly animation
-    const flyingButterfly = {
-      id: Math.random().toString(36).substr(2, 9),
-      position: [screenX - 60, screenY - 60],
+    setPoppedBubbles(prev => new Set([...prev, bubbleId]));
+    
+    // Add flying butterfly with individual characteristics
+    const newFlyingButterfly = {
+      id: Date.now() + Math.random(),
+      index: poppedBubble.colorGroup,
       scale: poppedBubble.scale,
-      index: poppedBubble.index,
+      position: poppedBubble.position,
+      personality: Math.random(), // Each butterfly gets unique personality
     };
+    
+    setFlyingButterflies(prev => [...prev, newFlyingButterfly]);
 
-    setFlyingButterflies(prev => [...prev, flyingButterfly]);
-
-    // Remove the popped bubble and add a new one
-    setBubbles(prev => {
-      const filtered = prev.filter(b => b.id !== bubbleId);
-      return [...filtered, createBubble()];
-    });
+    // Respawn bubble after delay
+    setTimeout(() => {
+      setPoppedBubbles(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(bubbleId);
+        return newSet;
+      });
+      
+      // Replace with new bubble
+      setBubbles(prev => {
+        const filtered = prev.filter(b => b.id !== bubbleId);
+        return [...filtered, createBubble()];
+      });
+    }, 2000); // 2 second delay before respawn
 
     setFreedButterflies(prev => prev + 1);
     setScore(prev => prev + 100);
@@ -80,7 +125,7 @@ const BubbleDojotoon = () => {
     }
   }, [bubbles, isMuted]);
 
-  const handleButterflyAnimationComplete = useCallback((butterflyId) => {
+  const handleFlyComplete = useCallback((butterflyId) => {
     setFlyingButterflies(prev => prev.filter(b => b.id !== butterflyId));
   }, []);
 
@@ -94,6 +139,7 @@ const BubbleDojotoon = () => {
     setBubbles([]);
     setFreedButterflies(0);
     setFlyingButterflies([]);
+    setPoppedBubbles(new Set());
     setShowCelebration(false);
     setScore(0);
   };
@@ -153,6 +199,11 @@ const BubbleDojotoon = () => {
             <div className="text-sm font-medium">
               Freed: <span className="text-success font-bold">{freedButterflies}/{TARGET_BUTTERFLIES}</span>
             </div>
+            {flyingButterflies.length > 0 && (
+              <div className="text-sm font-medium text-orange-500">
+                🦋 Flying: {flyingButterflies.length}
+              </div>
+            )}
           </div>
         </Card>
       </div>
@@ -192,34 +243,33 @@ const BubbleDojotoon = () => {
             enableRotate={false}
             enabled={false}
           />
-          {bubbles.map((bubble, i) => (
-            <GlassBubble
-              key={bubble.id}
-              position={bubble.position}
-              scale={bubble.scale}
-              butterflyProps={{
-                index: bubble.index,
-                size: bubble.scale * 0.8,
-                isFlying: false,
-                onFlyComplete: () => handleButterflyAnimationComplete(flyingButterflies[flyingButterflies.length - 1]?.id)
-              }}
-              onClick={() => handleBubblePop(bubble.id)}
+          
+          {/* Render bubbles */}
+          {bubbles.map((bubble) => (
+            !poppedBubbles.has(bubble.id) && (
+              <Float key={`bubble-${bubble.id}`} floatIntensity={1.5} speed={0.5}>
+                <StandaloneBubble
+                  key={`bubble-${bubble.id}`}
+                  bubble={bubble}
+                  onPop={handleBubblePop}
+                />
+              </Float>
+            )
+          ))}
+          
+          {/* Render flying butterflies */}
+          {flyingButterflies.map((butterfly) => (
+            <Butterfly
+              key={`flying-${butterfly.id}`}
+              index={COLOR_GROUPS[butterfly.index].index}
+              size={butterfly.scale * 0.8}
+              isFlying={true}
+              onFlyComplete={() => handleFlyComplete(butterfly.id)}
+              position={butterfly.position}
             />
           ))}
-          {/* Flying Butterflies */}
-          {flyingButterflies.map((butterfly, i) => (
-            <GlassBubble
-              key={butterfly.id}
-              position={[0, 0, 0]}
-              scale={butterfly.scale}
-              butterflyProps={{
-                index: butterfly.index,
-                size: butterfly.scale * 0.8,
-                isFlying: true,
-                onFlyComplete: () => handleButterflyAnimationComplete(butterfly.id)
-              }}
-            />
-          ))}
+          
+          <Environment preset="apartment" background={false} blur={1} />
         </Canvas>
       </div>
 

@@ -120,16 +120,29 @@ const Butterfly = ({ index = 0, size = 1, isFlying = false, onFlyComplete, posit
   const meshRef = useRef();
   const materialRef = useRef();
   
-  // Store flight parameters for smooth random movement
+  // Each butterfly gets its own completely independent flight parameters
   const flightParamsRef = useRef({
     startTime: 0,
     currentDirection: { x: 0, y: 0, z: 0.3 },
     targetDirection: { x: 0, y: 0, z: 0.3 },
     directionChangeTime: 0,
-    speed: 1.5 + Math.random() * 0.5,
+    speed: 1.5 + Math.random() * 0.5, // Each butterfly has its own speed
     centerX: 0,
     centerY: 0,
     centerZ: 0,
+    isTurning: false,
+    turnStartTime: 0,
+    turnDuration: 0.5 + Math.random() * 0.3, // Each butterfly has its own turn duration
+    currentRotationX: 0,
+    currentRotationY: 0,
+    currentRotationZ: 0,
+    targetRotationX: 0,
+    targetRotationY: 0,
+    targetRotationZ: 0,
+    // Each butterfly has its own unique flight characteristics
+    directionChangeInterval: 2 + Math.random() * 3, // Random interval for direction changes
+    maxFlightDistance: 10 + Math.random() * 5, // Each butterfly has its own flight distance
+    personality: Math.random(), // Each butterfly has a unique personality affecting its behavior
   });
   
   // Create stable texture with better error handling
@@ -218,55 +231,167 @@ const Butterfly = ({ index = 0, size = 1, isFlying = false, onFlyComplete, posit
         const elapsed = state.clock.elapsedTime - params.startTime;
         
         // Change direction randomly every 2-4 seconds
-        if (elapsed - params.directionChangeTime > 2 + Math.random() * 2) {
-          params.targetDirection = {
-            x: (Math.random() - 0.5) * 2,
-            y: (Math.random() - 0.5) * 2,
-            z: 0.2 + Math.random() * 0.6, // Always move forward a bit
-          };
+        if (elapsed - params.directionChangeTime > params.directionChangeInterval) {
+          // Personality affects flight behavior
+          const personality = params.personality;
+          
+          // Different personalities have different flight patterns
+          if (personality < 0.3) {
+            // Cautious butterfly - smaller movements, more vertical
+            params.targetDirection = {
+              x: (Math.random() - 0.5) * 1,
+              y: (Math.random() - 0.5) * 1.5,
+              z: 0.3 + Math.random() * 0.4,
+            };
+          } else if (personality < 0.7) {
+            // Normal butterfly - balanced movement
+            params.targetDirection = {
+              x: (Math.random() - 0.5) * 2,
+              y: (Math.random() - 0.5) * 2,
+              z: 0.2 + Math.random() * 0.6,
+            };
+          } else {
+            // Adventurous butterfly - larger movements, more horizontal
+            params.targetDirection = {
+              x: (Math.random() - 0.5) * 3,
+              y: (Math.random() - 0.5) * 1,
+              z: 0.1 + Math.random() * 0.8,
+            };
+          }
+          
           params.directionChangeTime = elapsed;
+          
+          // Calculate target rotation to face the direction
+          // Normalize the direction vector
+          const length = Math.sqrt(
+            params.targetDirection.x * params.targetDirection.x +
+            params.targetDirection.y * params.targetDirection.y +
+            params.targetDirection.z * params.targetDirection.z
+          );
+          
+          if (length > 0) {
+            const normalizedDir = {
+              x: params.targetDirection.x / length,
+              y: params.targetDirection.y / length,
+              z: params.targetDirection.z / length
+            };
+            
+            // Calculate rotation angles to face this direction
+            // Y rotation (horizontal turning)
+            params.targetRotationY = Math.atan2(normalizedDir.x, normalizedDir.z);
+            
+            // X rotation (vertical tilting)
+            const horizontalLength = Math.sqrt(normalizedDir.x * normalizedDir.x + normalizedDir.z * normalizedDir.z);
+            params.targetRotationX = -Math.atan2(normalizedDir.y, horizontalLength);
+            
+            // Z rotation (banking/tilting for turns)
+            params.targetRotationZ = 0; // Keep Z rotation minimal for now
+            
+            params.currentRotationX = meshRef.current.rotation.x;
+            params.currentRotationY = meshRef.current.rotation.y;
+            params.currentRotationZ = meshRef.current.rotation.z;
+            params.isTurning = true;
+            params.turnStartTime = elapsed;
+          }
         }
         
-        // Smoothly interpolate between current and target direction
-        const lerpFactor = 0.02; // Very smooth transitions
-        params.currentDirection.x += (params.targetDirection.x - params.currentDirection.x) * lerpFactor;
-        params.currentDirection.y += (params.targetDirection.y - params.currentDirection.y) * lerpFactor;
-        params.currentDirection.z += (params.targetDirection.z - params.currentDirection.z) * lerpFactor;
-        
-        // Update position based on current direction
-        // Dynamic speed: fast initial burst, then steady
-        const initialBurstTime = 1.0; // 1 second of fast movement
-        const initialSpeed = params.speed * 3; // 3x faster initially
-        const steadySpeed = params.speed;
-        
-        let currentSpeed;
-        if (elapsed < initialBurstTime) {
-          // Fast initial burst phase
-          currentSpeed = initialSpeed;
+        // Handle turning phase
+        if (params.isTurning) {
+          const turnElapsed = elapsed - params.turnStartTime;
+          const turnProgress = Math.min(turnElapsed / params.turnDuration, 1);
+          
+          // Smooth rotation interpolation
+          let angleDiffX = params.targetRotationX - params.currentRotationX;
+          let angleDiffY = params.targetRotationY - params.currentRotationY;
+          let angleDiffZ = params.targetRotationZ - params.currentRotationZ;
+
+          // Handle angle wrapping for X and Y
+          if (angleDiffX > Math.PI) angleDiffX -= 2 * Math.PI;
+          if (angleDiffX < -Math.PI) angleDiffX += 2 * Math.PI;
+          if (angleDiffY > Math.PI) angleDiffY -= 2 * Math.PI;
+          if (angleDiffY < -Math.PI) angleDiffY += 2 * Math.PI;
+
+          // For Z, we want to rotate towards the target, but the shortest path might involve wrapping
+          // This is a bit complex, but we'll handle it by adding/subtracting 2*PI if needed
+          // For simplicity, we'll just interpolate directly, and the shader will handle wrapping
+          angleDiffZ = params.targetRotationZ - params.currentRotationZ;
+
+          meshRef.current.rotation.x = params.currentRotationX + angleDiffX * turnProgress;
+          meshRef.current.rotation.y = params.currentRotationY + angleDiffY * turnProgress;
+          meshRef.current.rotation.z = params.currentRotationZ + angleDiffZ * turnProgress;
+          
+          // When turning is complete, start moving
+          if (turnProgress >= 1) {
+            params.isTurning = false;
+            params.currentDirection = params.targetDirection;
+          }
         } else {
-          // Steady phase
-          currentSpeed = steadySpeed;
+          // Smoothly interpolate between current and target direction (only when not turning)
+          const lerpFactor = 0.02; // Very smooth transitions
+          params.currentDirection.x += (params.targetDirection.x - params.currentDirection.x) * lerpFactor;
+          params.currentDirection.y += (params.targetDirection.y - params.currentDirection.y) * lerpFactor;
+          params.currentDirection.z += (params.targetDirection.z - params.currentDirection.z) * lerpFactor;
+          
+          // Update rotation to match current direction using the same calculation
+          const length = Math.sqrt(
+            params.currentDirection.x * params.currentDirection.x +
+            params.currentDirection.y * params.currentDirection.y +
+            params.currentDirection.z * params.currentDirection.z
+          );
+          
+          if (length > 0) {
+            const normalizedDir = {
+              x: params.currentDirection.x / length,
+              y: params.currentDirection.y / length,
+              z: params.currentDirection.z / length
+            };
+            
+            // Calculate rotation angles to face this direction
+            // Y rotation (horizontal turning)
+            const moveAngleY = Math.atan2(normalizedDir.x, normalizedDir.z);
+            
+            // X rotation (vertical tilting)
+            const horizontalLength = Math.sqrt(normalizedDir.x * normalizedDir.x + normalizedDir.z * normalizedDir.z);
+            const moveAngleX = -Math.atan2(normalizedDir.y, horizontalLength);
+            
+            // Z rotation (banking/tilting for turns)
+            const moveAngleZ = 0; // Keep Z rotation minimal for now
+
+            meshRef.current.rotation.x = moveAngleX;
+            meshRef.current.rotation.y = moveAngleY;
+            meshRef.current.rotation.z = moveAngleZ;
+          }
         }
         
-        meshRef.current.position.x += params.currentDirection.x * currentSpeed * delta;
-        meshRef.current.position.y += params.currentDirection.y * currentSpeed * delta;
-        meshRef.current.position.z += params.currentDirection.z * currentSpeed * delta;
-        
-        // Smooth rotation based on movement direction
-        // Calculate the angle the butterfly should face based on movement direction
-        // The butterfly's "head" is at the top middle of the rectangle
-        const moveAngle = Math.atan2(params.currentDirection.x, params.currentDirection.z);
-        
-        // Immediately rotate the butterfly so its head points in the direction it's traveling
-        meshRef.current.rotation.y = moveAngle;
+        // Only move forward when not turning
+        if (!params.isTurning) {
+          // Update position based on current direction
+          // Dynamic speed: fast initial burst, then steady
+          const initialBurstTime = 1.0; // 1 second of fast movement
+          const initialSpeed = params.speed * 3; // 3x faster initially
+          const steadySpeed = params.speed;
+          
+          let currentSpeed;
+          if (elapsed < initialBurstTime) {
+            // Fast initial burst phase
+            currentSpeed = initialSpeed;
+          } else {
+            // Steady phase
+            currentSpeed = steadySpeed;
+          }
+          
+          meshRef.current.position.x += params.currentDirection.x * currentSpeed * delta;
+          meshRef.current.position.y += params.currentDirection.y * currentSpeed * delta;
+          meshRef.current.position.z += params.currentDirection.z * currentSpeed * delta;
+        }
         
         // Keep Z rotation minimal to avoid backwards appearance when going down
         meshRef.current.rotation.z = 0;
         
         // Check if butterfly has flown far enough
-        if (meshRef.current.position.z > 15 || 
-            Math.abs(meshRef.current.position.x) > 8 || 
-            Math.abs(meshRef.current.position.y) > 8) {
+        if (meshRef.current.position.z > params.maxFlightDistance || 
+            Math.abs(meshRef.current.position.x) > params.maxFlightDistance || 
+            Math.abs(meshRef.current.position.y) > params.maxFlightDistance) {
           if (onFlyComplete) {
             onFlyComplete();
           }
