@@ -177,7 +177,6 @@ const BubbleDojotoon = () => {
             </p>
             <br />
             <br />
-            <br />
             <Button
               onClick={startGame}
               size="lg"
@@ -194,17 +193,19 @@ const BubbleDojotoon = () => {
   return (
     <div className="min-h-screen sky-gradient relative overflow-hidden">
       {/* Game UI */}
-      <div className="absolute top-4 left-4 z-10">
-        <Card className="p-4 bg-card/80 backdrop-blur-sm">
-          <div className="flex items-center gap-4">
-            <div className="text-sm font-medium">
-              Score: <span className="text-primary font-bold">{score}</span>
-            </div>
-            <div className="text-sm font-medium">
-              Freed: <span className="text-success font-bold">{freedButterflies}/{TARGET_BUTTERFLIES}</span>
+      <div className="absolute top-2 left-2 sm:top-4 sm:left-4 z-10 w-[90vw] max-w-xs sm:max-w-md">
+        <Card className="p-2 sm:p-4 bg-card/80 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-2 sm:gap-4">
+            <div className='flex flex-wrap items-center gap-2 sm:gap-4'>
+              <div className="text-xs sm:text-sm font-medium">
+                Score: <span className="text-primary font-bold">{score}</span>
+              </div>
+              <div className="text-xs sm:text-sm font-medium">
+                Freed: <span className="text-success font-bold">{freedButterflies}/{TARGET_BUTTERFLIES}</span>
+              </div>
             </div>
             {flyingButterflies.length > 0 && (
-              <div className="text-sm font-medium text-orange-500">
+              <div className="text-xs sm:text-sm font-medium text-orange-500">
                 🦋 Flying: {flyingButterflies.length}
               </div>
             )}
@@ -213,7 +214,7 @@ const BubbleDojotoon = () => {
       </div>
 
       {/* Controls */}
-      <div className="absolute top-4 right-4 z-10 flex gap-2">
+      <div className="absolute top-2 right-2 sm:top-4 sm:right-4 z-10 flex gap-2">
         <Button
           variant="outline"
           size="icon"
@@ -233,10 +234,10 @@ const BubbleDojotoon = () => {
       </div>
 
       {/* 3D Scene - Full screen canvas */}
-      <div className="absolute inset-0 w-full h-full">
+      <div className="absolute inset-0 w-full h-full touch-none">
         <Canvas
           camera={{ position: [0, 0, 8], fov: 60 }}
-          style={{ width: '100%', height: '100%' }}
+          style={{ width: '100vw', height: '100vh', touchAction: 'none' }}
         >
           <ambientLight intensity={0.6} />
           <pointLight position={[10, 10, 10]} intensity={0.8} />
