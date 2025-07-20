@@ -182,7 +182,7 @@ const BubbleDojotoon = () => {
               size="lg"
               className="w-full text-xl py-6"
             >
-              Start Adventure
+              Start Dojotoon
             </Button>
           </motion.div>
         </Card>
