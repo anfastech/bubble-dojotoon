@@ -10,6 +10,7 @@ import BubbleTest from "./pages/BubbleTest";
 import GlassBubbleTest from "./pages/GlassBubbleTest";
 import ManyBubblesTest from "./pages/ManyBubblesTest";
 import CelebrationScreenTest from "./pages/CelebrationScreenTest";
+import CameraFunctionsTest from "./pages/CameraFunctionsTest";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/glassbubbletest" element={<GlassBubbleTest />} />
           <Route path="/manybubblestest" element={<ManyBubblesTest />} />
           <Route path="/celebrationScreenTest" element={<CelebrationScreenTest />} />
+          <Route path="/cameraFunctionsTest" element={<CameraFunctionsTest />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

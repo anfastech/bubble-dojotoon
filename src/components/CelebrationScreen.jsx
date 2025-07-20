@@ -5,12 +5,15 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import dojoMascot from '@/assets/dojo-mascot.png';
 
-const CelebrationScreen = ({ score, onComplete, butterflyImage }) => {
+const CelebrationScreen = ({ score, onComplete, butterflyImage, overlays = [], onSelfieCaptured }) => {
   const [showSelfie, setShowSelfie] = useState(false);
   const [videoStream, setVideoStream] = useState(null);
   const [photoTaken, setPhotoTaken] = useState(false);
   const [selfieImage, setSelfieImage] = useState(null);
+  const [dimensions, setDimensions] = useState({ width: 350, height: 262 }); // Default to 4:3 aspect
+  const [retakeCount, setRetakeCount] = useState(0);
   const videoRef = useRef(null);
+  const canvasRef = useRef(null);
   const { toast } = useToast();
 
   // Confetti particles
@@ -37,10 +40,21 @@ const CelebrationScreen = ({ score, onComplete, butterflyImage }) => {
   }, []);
 
   useEffect(() => {
-    if (videoRef.current && videoStream) {
+    if (showSelfie && videoRef.current && videoStream) {
       videoRef.current.srcObject = videoStream;
+      console.log('Assigned stream to video element');
     }
-  }, [videoStream]);
+  }, [videoStream, showSelfie]);
+
+  // Update dimensions when video is ready
+  const handleLoadedMetadata = () => {
+    if (videoRef.current) {
+      setDimensions({
+        width: videoRef.current.videoWidth,
+        height: videoRef.current.videoHeight,
+      });
+    }
+  };
 
   // Camera access for selfie
   const startCamera = async () => {
@@ -48,12 +62,14 @@ const CelebrationScreen = ({ score, onComplete, butterflyImage }) => {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       setVideoStream(stream);
       setShowSelfie(true);
+      console.log('Camera stream started', stream);
     } catch (error) {
       toast({
         title: "Camera not available",
         description: "Unable to access camera for selfie feature.",
         variant: "destructive",
       });
+      console.error('Camera error:', error);
     }
   };
 
@@ -64,30 +80,61 @@ const CelebrationScreen = ({ score, onComplete, butterflyImage }) => {
     }
     setShowSelfie(false);
     setPhotoTaken(false);
+    setSelfieImage(null);
   };
 
   const takeSelfie = () => {
-    if (videoRef.current) {
-      const video = videoRef.current;
-      const canvas = document.createElement('canvas');
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    let loaded = 0;
+    const finish = () => {
       const imageData = canvas.toDataURL('image/png');
       setSelfieImage(imageData);
       setPhotoTaken(true);
+      if (onSelfieCaptured) onSelfieCaptured(imageData);
       toast({
         title: "Perfect! 📸",
         description: "Great selfie, butterfly hero!",
       });
-    } else {
-      setPhotoTaken(true);
-      toast({
-        title: "Perfect! 📸",
-        description: "Great selfie, butterfly hero!",
-      });
+      // Auto-download
+      const link = document.createElement('a');
+      link.download = 'selfie.png';
+      link.href = imageData;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    };
+    if (!overlays.length) {
+      finish();
+      return;
     }
+    overlays.forEach(b => {
+      const img = new window.Image();
+      img.src = b.src;
+      img.onload = () => {
+        ctx.drawImage(
+          img,
+          b.x,
+          b.y,
+          b.width,
+          b.height
+        );
+        loaded += 1;
+        if (loaded === overlays.length) {
+          finish();
+        }
+      };
+      img.onerror = () => {
+        loaded += 1;
+        if (loaded === overlays.length) {
+          finish();
+        }
+      };
+    });
   };
 
   return (
@@ -236,50 +283,69 @@ const CelebrationScreen = ({ score, onComplete, butterflyImage }) => {
                 Victory Selfie! 📸
               </h2>
 
-              {/* Camera view */}
-              <div className="relative bg-gray-900 rounded-xl overflow-hidden mb-4">
-                {videoStream ? (
+              {/* Camera view with overlays */}
+              {!photoTaken && (
+                <div
+                  style={{
+                    position: 'relative',
+                    width: '100%',
+                    maxWidth: 350,
+                    aspectRatio: `${dimensions.width} / ${dimensions.height}`,
+                    margin: '0 auto',
+                    background: '#222',
+                  }}
+                  className="mx-auto"
+                >
                   <video
-                    key={showSelfie + '-' + (videoStream ? videoStream.id || 'stream' : 'nostream')}
+                         key={showSelfie + '-' + (videoStream ? videoStream.id || 'stream' : 'nostream') + '-' + retakeCount}
+                    ref={videoRef}
                     autoPlay
                     playsInline
                     muted
-                    className="w-full h-48 sm:h-64 object-cover"
-                    ref={videoRef}
+                    style={{ width: '100%', height: 'auto', display: 'block', objectFit: 'cover' }}
+                    className="rounded-xl"
+                    onLoadedMetadata={handleLoadedMetadata}
                   />
-                ) : (
-                  <div className="w-full h-48 sm:h-64 bg-gray-200 flex items-center justify-center">
-                    <Camera className="w-10 sm:w-12 h-10 sm:h-12 text-gray-400" />
-                  </div>
-                )}
-                
-                {/* Celebration overlay */}
-                <div className="absolute top-4 left-4 right-4 flex justify-between items-start">
-                  <motion.div
-                    className="text-3xl"
-                    animate={{ rotate: [0, 20, -20, 0] }}
-                    transition={{ duration: 1, repeat: Infinity }}
-                  >
-                    🎉
-                  </motion.div>
-                  <motion.div
-                    className="text-2xl"
-                    animate={{ y: [0, -10, 0] }}
-                    transition={{ duration: 1.5, repeat: Infinity }}
-                  >
-                    🌟
-                  </motion.div>
+                  {overlays.map((b, i) => (
+                    <img
+                      key={i}
+                      src={b.src}
+                      alt={`overlay-${i}`}
+                      style={{
+                        position: 'absolute',
+                        left: `${(b.x / dimensions.width) * 100}%`,
+                        top: `${(b.y / dimensions.height) * 100}%`,
+                        width: `${(b.width / dimensions.width) * 100}%`,
+                        height: `${(b.height / dimensions.height) * 100}%`,
+                        pointerEvents: 'none',
+                        userSelect: 'none',
+                      }}
+                    />
+                  ))}
                 </div>
-                
-                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
-                  <p className="text-white text-lg font-bold text-center bg-black/50 px-4 py-2 rounded-full">
-                    Butterfly Hero! 🦋
-                  </p>
+              )}
+              {/* Preview of captured image */}
+              {photoTaken && selfieImage && (
+                <div style={{ textAlign: 'center' }}>
+                  <img
+                    src={selfieImage}
+                    alt="Selfie Preview"
+                    style={{ maxWidth: 350, borderRadius: 16, border: '2px solid #ccc', margin: '0 auto', width: '100%', height: 'auto' }}
+                  />
+                  <a href={selfieImage} download="selfie.png" style={{ display: 'block', marginTop: 8 }}>
+                    Download Photo
+                  </a>
+                  <Button onClick={() => {
+  setPhotoTaken(false);
+  setSelfieImage(null);
+  setRetakeCount(c => c + 1);
+}} style={{ marginLeft: 8 }}>
+  Retake
+</Button>
                 </div>
-              </div>
-
+              )}
               {/* Camera controls */}
-              <div className="flex gap-2 sm:gap-4">
+              <div className="flex gap-2 sm:gap-4 mt-4">
                 {!photoTaken ? (
                   <Button
                     onClick={takeSelfie}
@@ -289,16 +355,7 @@ const CelebrationScreen = ({ score, onComplete, butterflyImage }) => {
                   >
                     📸 Snap!
                   </Button>
-                ) : (
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="flex-1 text-center py-2 sm:py-3 bg-success text-success-foreground rounded-lg font-semibold text-base sm:text-lg"
-                  >
-                    Perfect Shot! ⭐
-                  </motion.div>
-                )}
-                
+                ) : null}
                 <Button
                   onClick={() => {
                     stopCamera();
@@ -315,6 +372,16 @@ const CelebrationScreen = ({ score, onComplete, butterflyImage }) => {
           )}
         </AnimatePresence>
       </div>
+      {showSelfie && (
+        <>
+          <canvas
+            ref={canvasRef}
+            width={dimensions.width}
+            height={dimensions.height}
+            style={{ display: 'none' }}
+          />
+        </>
+      )}
     </motion.div>
   );
 };
