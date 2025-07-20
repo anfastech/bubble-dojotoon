@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index.jsx";
 import NotFound from "./pages/NotFound";
-import ButterflyTest from "./pages/butterflytest.jsx";
+import ButterflyTest from "./pages/ButterflyTest.jsx";
 import BubbleTest from "./pages/BubbleTest";
 import GlassBubbleTest from "./pages/GlassBubbleTest";
 import ManyBubblesTest from "./pages/ManyBubblesTest";

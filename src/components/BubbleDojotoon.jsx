@@ -162,18 +162,22 @@ const BubbleDojotoon = () => {
   if (!gameStarted) {
     return (
       <div className="min-h-screen sky-gradient flex items-center justify-center p-4">
-        <Card className="p-8 text-center max-w-md bg-card/80 backdrop-blur-sm">
+        <Card className="p-12 text-center max-w-lg bg-card/80 backdrop-blur-sm">
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.5 }}
+            className='rounded-lg p-6'
           >
             <h1 className="text-4xl font-bold text-primary mb-4">
               Bubble Dojotoon
             </h1>
             <p className="text-lg text-muted-foreground mb-6">
-              Free the butterflies from their bubble homes! 🦋
+              You are dojo hero, could you help the butterflies to fly 🦋 from magical bubbles 🫧
             </p>
+            <br />
+            <br />
+            <br />
             <Button
               onClick={startGame}
               size="lg"
