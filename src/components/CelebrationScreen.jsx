@@ -39,12 +39,15 @@ const CelebrationScreen = ({ score, onComplete, butterflyImage, overlays = [], o
     }
   }, []);
 
-  useEffect(() => {
-    if (showSelfie && videoRef.current && videoStream) {
-      videoRef.current.srcObject = videoStream;
-      console.log('Assigned stream to video element');
+  const setVideoRef = node => {
+    if (node) {
+      if (node.srcObject !== videoStream) {
+        node.srcObject = videoStream;
+        console.log('Assigned stream to video element (ref callback)');
+      }
+      videoRef.current = node;
     }
-  }, [videoStream, showSelfie]);
+  };
 
   // Update dimensions when video is ready
   const handleLoadedMetadata = () => {
@@ -297,8 +300,8 @@ const CelebrationScreen = ({ score, onComplete, butterflyImage, overlays = [], o
                   className="mx-auto"
                 >
                   <video
-                         key={showSelfie + '-' + (videoStream ? videoStream.id || 'stream' : 'nostream') + '-' + retakeCount}
-                    ref={videoRef}
+                    key={showSelfie + '-' + (videoStream ? videoStream.id || 'stream' : 'nostream') + '-' + retakeCount}
+                    ref={setVideoRef}
                     autoPlay
                     playsInline
                     muted
